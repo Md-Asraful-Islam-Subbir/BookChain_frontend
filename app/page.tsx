@@ -143,7 +143,7 @@ export default function Home() {
       </section>
       {/* Additional sections like NewBooks, BlogPosts, HowItWorks can be added here */}
       <NewBooks />
-      <Button size='lg' className="flex mt-10 mb-10 mx-auto bg-yellow-500 px-8 py-6 rounded-xl">
+      <Button size='lg' className="flex mt-10 mb-10 mx-auto bg-yellow-500 hover:bg-yellow-600 px-8 py-6 rounded-xl">
         <Link href="/books">
           <div className="font-semibold text-black">
             Browse All Books
@@ -215,19 +215,19 @@ export default function Home() {
               <Card key={index} className="h-full flex flex-col overflow-auto transition-all duration-300 hover:shadow-lg">
                 <CardContent className="p-0 flex flex-col h-full">
                   <div className="relative h-48 overflow-hidden">
-                    <Image src={post.imageSrc} alt={post.title} fill  className="object-cover transition-transform duration-300 hover:scale-105" />
+                    <Image src={post.imageSrc} alt={post.title} fill className="object-cover transition-transform duration-300 hover:scale-105" />
                   </div>
                   <div className="p-6 flex flex-col grow">
-<h3 className="text-xl font-semibold mb-2 flex items-center gap-2">
-  <div className="bg-primary/10 p-2 rounded-full">
-                      {post.icon}
-                    </div>
-                    <span className="grow">{post.title}</span>
-</h3>
-<p className="text-gray-600 text-sm grow">{post.description}</p>
-<Button variant="link" className="mt-4 p-0 flex items-center text-primary font-semibold">
-  Read More <ArrowRight className="w-4 h-4" />
-</Button>
+                    <h3 className="text-xl font-semibold mb-2 flex items-center gap-2">
+                      <div className="bg-primary/10 p-2 rounded-full">
+                        {post.icon}
+                      </div>
+                      <span className="grow">{post.title}</span>
+                    </h3>
+                    <p className="text-gray-600 text-sm grow">{post.description}</p>
+                    <Button variant="link" className="mt-4 p-0 flex items-center text-primary font-semibold">
+                      Read More <ArrowRight className="w-4 h-4" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
