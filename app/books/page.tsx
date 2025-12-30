@@ -165,7 +165,7 @@ const Page = () => {
                                             key={book._id}
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: 10 }}
+                                            exit={{ opacity: 0, y: -10 }}
                                             transition={{ duration: 0.3 }}
                                         >
                                             <Card className="group relative overflow-hidden rounded-lg transition-shadow duration-300 hover:shadow-2xl bg-white border-0">

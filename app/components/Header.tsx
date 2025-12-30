@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { toggleLoginDialog } from '@/store/slice/userSlice'
 import {Sheet,SheetContent,SheetHeader,SheetTitle,SheetTrigger,} from "@/components/ui/sheet"
 import { Menu } from 'lucide-react';
+import AuthPage from './AuthPage'
 
 
 const Header = () => {
@@ -71,6 +72,11 @@ const Header = () => {
             label: 'Login/Sign Up',
             onclick: handleLoginClick
         }]),
+        {
+            icon: <Lock className='h-5 w-5' />,
+            label: 'Login/Sign Up',
+            onclick: handleLoginClick
+        },
         {
             icon: <User className='h-5 w-5' />,
             label: 'My Profile',
@@ -241,6 +247,7 @@ const Header = () => {
                             </div>
                     </Link>
     </div>
+    <AuthPage isLoginOpen={isLoginOpen} setIsLoginOpen={handleLoginClick}/>
         </header>
     )
 }
