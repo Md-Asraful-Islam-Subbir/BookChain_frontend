@@ -2,12 +2,17 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BASE_URL, useForgotPasswordMutation, useLoginMutation, useRegisterMutation } from '@/store/api';
+import { authStatus, toggleLoginDialog } from '@/store/slice/userSlice';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle, Eye, EyeOff, Loader2, Lock, Mail, User } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
+import { useDispatch } from 'react-redux';
 
 
 interface LoginProps {
@@ -35,11 +40,70 @@ const AuthPage: React.FC<LoginProps> = ({ isLoginOpen, setIsLoginOpen }) => {
     const [signUpLoading, setSignUpLoading] = useState(false);
     const [forgotPasswordLoading, setforgotPasswordLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
-
+    const [register] = useRegisterMutation();
+    const [login] = useLoginMutation();
+    const [forgotPassword] = useForgotPasswordMutation();
+    const dispatch = useDispatch()
+    const router=useRouter();
     const { register: registerLogin, handleSubmit: handleLoginSubmit, formState: { errors: loginError } } = useForm<LoginFormData>();
     const { register: registerSignUp, handleSubmit: handleSignUpSubmit, formState: { errors: signupError } } = useForm<SignUpFormData>();
     const { register: registerForgotPassword, handleSubmit: handleForgotPasswordSubmit, formState: { errors: forgotPasswordError } } = useForm<ForgotPasswordFormData>();
 
+    const onSubmitSignUp = async (data: SignUpFormData) => {
+        setSignUpLoading(true)
+        try {
+            const { email, password, name } = data;
+            const result = await register({ email, password, name }).unwrap();
+            console.log('this is register result', result);
+            if (result.success) {
+                toast.success('verification link send to email successfully,please verify your email')
+                dispatch(toggleLoginDialog());
+            }
+        } catch (error) {
+            console.log(error);
+            toast.error('Email already registered')
+        }
+        finally {
+            setSignUpLoading(false);
+        }
+    }
+    const onSubmitLogin = async (data: LoginFormData) => {
+        setLoginLoading(true)
+        try {
+            const result = await login(data).unwrap();
+            console.log('this is login result', result);
+            if (result.success) {
+                toast.success('User login successfully')
+                dispatch(toggleLoginDialog());
+                dispatch(authStatus())
+                window.location.reload();
+            }
+        } catch (error) {
+            console.log(error);
+            toast.error('Email or Password is incorrect')
+        }
+        finally {
+            setLoginLoading(false);
+        }
+    }
+    const handleGoogleLogin = async () => {
+        setGoogleLoading(true)
+        try {
+            router.push(`${BASE_URL}/auth/google`)
+             dispatch(authStatus())
+             dispatch(toggleLoginDialog());
+             setTimeout(()=>{
+                toast.success('Google login successfully')
+                setIsLoginOpen(false)
+             },3000)
+        } catch (error) {
+            console.log(error);
+            toast.error('Email or Password is incorrect')
+        }
+        finally {
+            setGoogleLoading(true);
+        }
+    }
     return (
         <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
             <DialogContent className='sm:max-w-106.25 p-6'>
@@ -60,7 +124,7 @@ const AuthPage: React.FC<LoginProps> = ({ isLoginOpen, setIsLoginOpen }) => {
                                 transition={{ duration: 0.3 }}
                             >
                                 <TabsContent value='login'>
-                                    <form className='space-y-4'>
+                                    <form onSubmit={handleLoginSubmit(onSubmitLogin)} className='space-y-4'>
                                         <div className='relative'>
                                             <Input {...registerLogin("email", { required: "Email is required" })} placeholder='Email' type='email' className='pl-10' />
                                             <Mail className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500' size={20} />
@@ -101,7 +165,7 @@ const AuthPage: React.FC<LoginProps> = ({ isLoginOpen, setIsLoginOpen }) => {
                                         <p className='mx-2 text-gray-500 text-sm'>or</p>
                                         <div className='flex-1 h-px bg-gray-300'></div>
                                     </div>
-                                    <Button className='w-full flex items-center justify-center gap-2 bg-white text-gray-700 border border-gray-300'>
+                                    <Button onClick={handleGoogleLogin} className='w-full flex items-center justify-center gap-2 bg-white text-gray-700 border border-gray-300'>
                                         {
                                             googleLoading ? (
                                                 <>
@@ -119,7 +183,7 @@ const AuthPage: React.FC<LoginProps> = ({ isLoginOpen, setIsLoginOpen }) => {
                                     </Button>
                                 </TabsContent>
                                 <TabsContent value='signup' className='space-y-4'>
-                                    <form className='space-y-4'>
+                                    <form onSubmit={handleSignUpSubmit(onSubmitSignUp)} className='space-y-4'>
                                         <div className='relative'>
                                             <Input {...registerSignUp("name", { required: "Username is required" })} placeholder='Username' type='name' className='pl-10' />
                                             <User className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500' size={20} />
@@ -165,7 +229,7 @@ const AuthPage: React.FC<LoginProps> = ({ isLoginOpen, setIsLoginOpen }) => {
                                         }
                                         <Button type='submit' className='w-full font-bold'>
                                             {
-                                                logingLoading ? (
+                                                signUpLoading ? (
                                                     <Loader2 className='animate-spin mr-2' size={20} />
                                                 ) : (
                                                     "Sign Up"
@@ -178,7 +242,7 @@ const AuthPage: React.FC<LoginProps> = ({ isLoginOpen, setIsLoginOpen }) => {
                                     {
                                         !forgotPasswordSuccess ? (
                                             <TabsContent value='forgot'>
-                                                <form className='space-y-4'>
+                                                <form  className='space-y-4'>
                                                     <div className='relative'>
                                                         <Input {...registerForgotPassword("email", { required: "Email is required" })} placeholder='Email' type='email' className='pl-10' />
                                                         <Mail className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500' size={20} />

@@ -11,50 +11,59 @@ import { useState } from 'react'
 import { DropdownMenuContent } from '@/components/ui/dropdown-menu'
 import { useRouter } from 'next/navigation'
 import { useDispatch, useSelector } from 'react-redux'
-import { toggleLoginDialog } from '@/store/slice/userSlice'
-import {Sheet,SheetContent,SheetHeader,SheetTitle,SheetTrigger,} from "@/components/ui/sheet"
+import { logout, toggleLoginDialog } from '@/store/slice/userSlice'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, } from "@/components/ui/sheet"
 import { Menu } from 'lucide-react';
 import AuthPage from './AuthPage'
+import { useLogoutMutation } from '@/store/api'
+import toast from 'react-hot-toast'
 
 
 const Header = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const router=useRouter();
-    const dispatch=useDispatch();
-    const isLoginOpen=useSelector((state:RootState) => state.user.isLoginDialogOpen)
+    const router = useRouter();
+    const dispatch = useDispatch();
+    const isLoginOpen = useSelector((state: RootState) => state.user.isLoginDialogOpen)
     const handleLoginClick = () => {
         dispatch(toggleLoginDialog());
         setIsDropdownOpen(false);
     }
-    const handleLogout = () => {
-        console.log('Logout clicked');
+    const handleLogout = async () => {
+        try {
+            await logoutMutation({}).unwrap();
+            dispatch(logout());
+            toast.success('user logout successfully')
+            setIsDropdownOpen(false)
+        } catch (error) {
+            console.log(error);
+            toast.error('failed user logout')
+        }
     }
     const handleProtectionNavigation = (path: string) => {
         console.log(`Navigating to ${path}`);
-        if(user){
+        if (user) {
             router.push(path);
             setIsDropdownOpen(false);
-        }else{
+        } else {
             dispatch(toggleLoginDialog());
             setIsDropdownOpen(false);
         }
     }
-    const user = {
-        profilePicture: "",
-        name: "",
-        email: ""
-    }
-    const userPlaceholder = '';
+    const user = useSelector((state: RootState) => state.user.user);
+    const [logoutMutation] = useLogoutMutation();
+    const userPlaceholder = user?.name?.split(" ").map((name: string) => name[0]).join("");
     const menuItems = [
-        ...(user && user ? [
+        ...(user ? [
             {
                 href: 'account/profile',
                 content: (
-                    <div className='flex space-x-4 items-center p-2 border-b'>
-                        <Avatar className='h-12 w-12 -ml-2 rounded-full'>
+                    <div className='flex space-x-2 items-center p-2 border-b'>
+                        <Avatar className='h-12 w-12 -ml-6 rounded-full'>
                             {user?.profilePicture ? (
-                                <AvatarImage alt='user_image'></AvatarImage>) :
-                                (<AvatarFallback>{userPlaceholder}</AvatarFallback>)}
+                                <AvatarImage src={user?.profilePicture} alt='user_image' />
+                            ) : (
+                                <AvatarFallback>{userPlaceholder}</AvatarFallback>
+                            )}
                         </Avatar>
                         <div className='flex flex-col'>
                             <span className='font-semibold text-md'>
@@ -67,16 +76,14 @@ const Header = () => {
                     </div>
                 )
             }
-        ] : [{
-            icon: <Lock className='h-5 w-5' />,
-            label: 'Login/Sign Up',
-            onclick: handleLoginClick
-        }]),
-        {
-            icon: <Lock className='h-5 w-5' />,
-            label: 'Login/Sign Up',
-            onclick: handleLoginClick
-        },
+        ] : [
+            {
+                icon: <Lock className='h-5 w-5' />,
+                label: 'Login/Sign Up',
+                onclick: handleLoginClick
+            }
+        ]),
+
         {
             icon: <User className='h-5 w-5' />,
             label: 'My Profile',
@@ -86,11 +93,13 @@ const Header = () => {
             icon: <Package className='h-5 w-5' />,
             label: 'My Orders',
             onclick: () => handleProtectionNavigation('/account/orders')
-        }, {
+        },
+        {
             icon: <PiggyBank className='h-5 w-5' />,
             label: 'My Selling Orders',
             onclick: () => handleProtectionNavigation('/account/selling-products')
-        }, {
+        },
+        {
             icon: <ShoppingCart className='h-5 w-5' />,
             label: 'My Cart',
             onclick: () => handleProtectionNavigation('/checkout/cart')
@@ -120,13 +129,14 @@ const Header = () => {
             label: 'Help',
             href: '/how-it-works'
         },
-        ...(user && [{
+
+        ...(user ? [{
             icon: <LogOut className='h-5 w-5' />,
             label: 'Logout',
             onclick: handleLogout
-        }
-        ])
-    ]
+        }] : [])
+    ];
+
     const MenuItems = ({ className = " " }) => (
         <div className={className}>
             {menuItems.map((item, index) =>
@@ -173,7 +183,7 @@ const Header = () => {
                             <Button variant='ghost'>
                                 <Avatar className='h-8 w-8 rounded-full'>
                                     {user?.profilePicture ? (
-                                        <AvatarImage alt='user_image'></AvatarImage>) :
+                                        <AvatarImage src={user?.profilePicture} alt='user_image'></AvatarImage>) :
                                         userPlaceholder ? (<AvatarFallback>{userPlaceholder}</AvatarFallback>) :
                                             (<User className='ml-2 mt-2' />)
                                     }
@@ -186,45 +196,45 @@ const Header = () => {
                         </DropdownMenuContent>
                     </DropdownMenu>
                     <Link href='/checkout/cart'>
-                    <div className='relative'>
-                        <Button variant='ghost' className='relative'>
-                            <ShoppingCart className='h-6 w-6 mr-2' />
-                            Cart
+                        <div className='relative'>
+                            <Button variant='ghost' className='relative'>
+                                <ShoppingCart className='h-6 w-6 mr-2' />
+                                Cart
                             </Button>
                             {user && (
                                 <span className='absolute top-2 left-5 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full px-1'>3</span>
                             )}
-                            </div>
+                        </div>
                     </Link>
                 </div>
             </div>
             {/* Mobile Header */}
-<div className="container mx-auto flex lg:hidden items-center justify-between p-4">
-    <Sheet>
-        <SheetTrigger asChild>
-            <Button variant='ghost' size='icon'>
-                <Menu className="h-6 w-6" />
-            </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="w-80 p-0">
-            <SheetHeader>
-                <SheetTitle className="sr-only"></SheetTitle>
-            </SheetHeader>
-            <div className="border-b p-4">
-                <Link href="/">
-                    <Image
-                        src="/images/web-logo1.png"
-                        width={150}
-                        height={40}
-                        alt="mobile_logo"
-                        className="h-10 w-auto"
-                    />
-                </Link>
-            </div>
-            <MenuItems className="py-2 -mt-8" />
-        </SheetContent>
-    </Sheet>
-    <Link href='/' className='text-2xl font-bold'>
+            <div className="container mx-auto flex lg:hidden items-center justify-between p-4">
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <Button variant='ghost' size='icon'>
+                            <Menu className="h-6 w-6" />
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-80 p-0">
+                        <SheetHeader>
+                            <SheetTitle className="sr-only"></SheetTitle>
+                        </SheetHeader>
+                        <div className="border-b p-4">
+                            <Link href="/">
+                                <Image
+                                    src="/images/web-logo1.png"
+                                    width={150}
+                                    height={40}
+                                    alt="mobile_logo"
+                                    className="h-10 w-auto"
+                                />
+                            </Link>
+                        </div>
+                        <MenuItems className="py-2 -mt-8" />
+                    </SheetContent>
+                </Sheet>
+                <Link href='/' className='text-2xl font-bold'>
                     <Image src='/images/web-logo1.png' alt='Desktop Logo' width={450} height={100} className='h-6 md:h-10 w-20 md:w-auto' />
                 </Link>
                 <div className='flex flex-1 items-center justify-center max-w-xl px-4'>
@@ -239,15 +249,15 @@ const Header = () => {
                     <div className='relative'>
                         <Button variant='ghost' className='relative'>
                             <ShoppingCart className='h-6 w-6 mr-2' />
-                            
-                            </Button>
-                            {user && (
-                                <span className='absolute top-2 left-5 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full px-1'>3</span>
-                            )}
-                            </div>
-                    </Link>
-    </div>
-    <AuthPage isLoginOpen={isLoginOpen} setIsLoginOpen={handleLoginClick}/>
+
+                        </Button>
+                        {user && (
+                            <span className='absolute top-2 left-5 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full px-1'>3</span>
+                        )}
+                    </div>
+                </Link>
+            </div>
+            <AuthPage isLoginOpen={isLoginOpen} setIsLoginOpen={handleLoginClick} />
         </header>
     )
 }
