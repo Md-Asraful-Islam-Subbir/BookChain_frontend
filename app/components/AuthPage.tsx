@@ -44,7 +44,7 @@ const AuthPage: React.FC<LoginProps> = ({ isLoginOpen, setIsLoginOpen }) => {
     const [login] = useLoginMutation();
     const [forgotPassword] = useForgotPasswordMutation();
     const dispatch = useDispatch()
-    const router=useRouter();
+    const router = useRouter();
     const { register: registerLogin, handleSubmit: handleLoginSubmit, formState: { errors: loginError } } = useForm<LoginFormData>();
     const { register: registerSignUp, handleSubmit: handleSignUpSubmit, formState: { errors: signupError } } = useForm<SignUpFormData>();
     const { register: registerForgotPassword, handleSubmit: handleForgotPasswordSubmit, formState: { errors: forgotPasswordError } } = useForm<ForgotPasswordFormData>();
@@ -90,18 +90,35 @@ const AuthPage: React.FC<LoginProps> = ({ isLoginOpen, setIsLoginOpen }) => {
         setGoogleLoading(true)
         try {
             router.push(`${BASE_URL}/auth/google`)
-             dispatch(authStatus())
-             dispatch(toggleLoginDialog());
-             setTimeout(()=>{
+            dispatch(authStatus())
+            dispatch(toggleLoginDialog());
+            setTimeout(() => {
                 toast.success('Google login successfully')
                 setIsLoginOpen(false)
-             },3000)
+            }, 3000)
         } catch (error) {
             console.log(error);
             toast.error('Email or Password is incorrect')
         }
         finally {
             setGoogleLoading(true);
+        }
+    }
+    const onSubmitForgotPassword = async (data: ForgotPasswordFormData) => {
+        setforgotPasswordLoading(true)
+        try {
+            const result = await forgotPassword(data.email).unwrap();
+            console.log('this is login result', result);
+            if (result.success) {
+                toast.success('Forgot Password link sent successfully')
+                setForgotPasswordSuccess(true);
+            }
+        } catch (error) {
+            console.log(error);
+            toast.error('Failed to sent')
+        }
+        finally {
+            setforgotPasswordLoading(false);
         }
     }
     return (
@@ -242,7 +259,7 @@ const AuthPage: React.FC<LoginProps> = ({ isLoginOpen, setIsLoginOpen }) => {
                                     {
                                         !forgotPasswordSuccess ? (
                                             <TabsContent value='forgot'>
-                                                <form  className='space-y-4'>
+                                                <form onSubmit={handleForgotPasswordSubmit(onSubmitForgotPassword)} className='space-y-4'>
                                                     <div className='relative'>
                                                         <Input {...registerForgotPassword("email", { required: "Email is required" })} placeholder='Email' type='email' className='pl-10' />
                                                         <Mail className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500' size={20} />
