@@ -6,7 +6,8 @@ const nextConfig: NextConfig = {
   images: {
     domains: [
       "images.unsplash.com",
-      "media.istockphoto.com"
+      "media.istockphoto.com",
+      'res.cloudinary.com'
     ]
   }
 };

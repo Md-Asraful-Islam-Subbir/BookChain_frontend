@@ -1,6 +1,6 @@
 'use client'
 import { useParams, useRouter } from 'next/navigation'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -8,6 +8,10 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle2, Heart, Loader2, MapPin, MessageCircle, Share2Icon, ShoppingCart, User2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useGetProductByIdQuery } from '@/store/api';
+import { BookDetails } from '@/lib/types/type';
+import BookLoader from '@/lib/BookLoader';
+import NoData from '@/app/components/NoData';
 
 
 const page = () => {
@@ -16,31 +20,14 @@ const page = () => {
     const [selectedImage, setSelectedImage] = useState(0);
     const router = useRouter();
     const [isAddToCart, setIsAddToCart] = useState(false);
+    const {data:apiResponse={},isLoading,isError}=useGetProductByIdQuery(id)
+    const [book,setBook]=useState<BookDetails|null>(null)
 
-    const book = {
-        _id: "1",
-        images: ["https://images.unsplash.com/photo-1604866830893-c13cafa515d5?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8b25saW5lJTIwc2VsbCUyMGJvb2tzfGVufDB8fDB8fHww",
-            "https://media.istockphoto.com/id/910384920/photo/kid-reading-near-locked-door.webp?a=1&b=1&s=612x612&w=0&k=20&c=J3FL4ZVORItw_bkLzlVo4WO-xUy22S7Qqbuq2xusNnc=",
-            "https://images.unsplash.com/photo-1492539438225-2666b2a98f93?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fG9sZCUyMCUyMGJvb2tzfGVufDB8fDB8fHww"
-        ],
-        title: "The Alchemist",
-        category: "Reading Books (Novels)",
-        condition: "Excellent",
-        classType: "B.Com",
-        subject: "Fiction",
-        price: 300,
-        author: "Paulo Coelho",
-        edition: "25th Anniversary Edition",
-        description: "A philosophical book about a shepherd's journey to realize his dreams.",
-        finalPrice: 250,
-        shippingCharge: 50,
-        paymentMode: "UPI",
-        paymentDetails: {
-            upiId: "example@upi"
-        },
-        createdAt: new Date("2024-01-01"),
-        seller: { name: "John Doe", contact: "1234567890" }
-    }
+    useEffect(()=>{
+if(apiResponse.success){
+    setBook(apiResponse.data)
+}
+    },[apiResponse])
 
     const handleAddToCart = (productId: string) => {
 
@@ -49,6 +36,22 @@ const page = () => {
 
     }
     const bookImage = book?.images || [];
+    if(isLoading){
+        <BookLoader/>
+    }
+    if (!book || isError) {
+        return (
+          <div className="my-10 max-w-3xl justify-center mx-auto">
+            <NoData
+              imageUrl="/images/no-book.jpg"
+              message="Loading...."
+              description="Wait, we are fetching book details"
+              onClick={() => router.push("/book-sell")}
+              buttonText="Sell Your First Book"
+            />
+          </div>
+        );
+      }
     const calculateDiscount = (price: number, finalPrice: number) => {
         if (price > finalPrice && price > 0) {
             return Math.round(((price - finalPrice) / price) * 100);
@@ -209,16 +212,18 @@ const page = () => {
                                             <Badge variant='secondary' className='text-green-600'><CheckCircle2 className='h-3 w-3 mt-2' />Verified</Badge>
                                         </div>
                                         <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                                            <MapPin className='h-4 w-4' />Barishal Sador
+                                            <MapPin className='h-4 w-4' />{
+                                                book.seller?.addresses?.[0].city? `${book.seller?.addresses?.[0].city},${book.seller?.addresses?.[0].state}`:'location is not found'
+                                            }
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             {
-                                book.seller.contact && (
+                                book.seller.phoneNumber && (
                                     <div className='flex items-center gap-2 text-sm'>
                                         <MessageCircle className='h-4 w-4 text-blue-600' />
-                                        <span>Contact: {book.seller.contact}</span>
+                                        <span>Contact: {book.seller.phoneNumber}</span>
                                     </div>
                                 )
                             }

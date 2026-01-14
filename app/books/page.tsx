@@ -1,8 +1,8 @@
 'use client'
-import { books, filters } from '@/lib/Constant';
+import { filters } from '@/lib/Constant';
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from 'next/link';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { formatDistanceToNow } from 'date-fns';
 import BookLoader from '@/lib/BookLoader';
@@ -15,6 +15,8 @@ import { Heart } from 'lucide-react';
 import Pagination from '../components/Pagination';
 import NoData from '../components/NoData';
 import { useRouter } from 'next/navigation';
+import { useGetProductsQuery } from '@/store/api';
+import { BookDetails } from '@/lib/types/type';
 
 const Page = () => {
     const [currentPage, setCurrentPage] = useState(1);
@@ -23,8 +25,15 @@ const Page = () => {
     const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
     const [sortOption, setSortOption] = useState('newest');
     const bookPerPage = 6;
-    const [isLoading, setIsLoading] = useState(false);
+    const {data:apiResponse={},isLoading}=useGetProductsQuery({})
     const router = useRouter();
+    const [books,setBooks]=useState<BookDetails[]>([])
+
+    useEffect(()=>{
+if(apiResponse.success){
+    setBooks(apiResponse.data)
+}
+    },[apiResponse])
 
     const toggleFilter = (section: string, item: string) => {
         const updateFilter = (prev: string[]) => {

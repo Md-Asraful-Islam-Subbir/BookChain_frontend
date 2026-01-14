@@ -28,9 +28,9 @@ export interface BookDetails {
 export interface UserData {
     name: string;
     email: string;
-    password?: string;
-    profilePicture?: string;
-    phoneNumber?: string;
+    profilePicture: string;
+    phoneNumber: string;
+    addresses:Address[];
 }
 
 export interface Address {
