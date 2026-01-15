@@ -8,11 +8,15 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle2, Heart, Loader2, MapPin, MessageCircle, Share2Icon, ShoppingCart, User2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useGetProductByIdQuery } from '@/store/api';
+import { useAddToCartMutation, useAddToWishlistMutation, useGetProductByIdQuery, useRemoveFromWishlistMutation } from '@/store/api';
 import { BookDetails } from '@/lib/types/type';
 import BookLoader from '@/lib/BookLoader';
 import NoData from '@/app/components/NoData';
-
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
+import toast from 'react-hot-toast';
+import { addToCart } from '@/store/slice/cartSlice';
+import { addToWishlistAction, removeFromWishListAction } from '@/store/slice/wishlistSlice';
 
 const page = () => {
     const params = useParams();
@@ -20,38 +24,87 @@ const page = () => {
     const [selectedImage, setSelectedImage] = useState(0);
     const router = useRouter();
     const [isAddToCart, setIsAddToCart] = useState(false);
-    const {data:apiResponse={},isLoading,isError}=useGetProductByIdQuery(id)
-    const [book,setBook]=useState<BookDetails|null>(null)
+    const { data: apiResponse = {}, isLoading, isError } = useGetProductByIdQuery(id)
+    const [book, setBook] = useState<BookDetails | null>(null);
+    const [addToCartMutation] = useAddToCartMutation();
+    const [addToWishlistMuttation] = useAddToWishlistMutation();
+    const [removeWishlistMuttation] = useRemoveFromWishlistMutation();
+    const wishlist = useSelector((state: RootState) => state.wishlist.items)
+    const dispatch = useDispatch();
 
-    useEffect(()=>{
-if(apiResponse.success){
-    setBook(apiResponse.data)
-}
-    },[apiResponse])
+    useEffect(() => {
+        if (apiResponse.success) {
+            setBook(apiResponse.data)
+        }
+    }, [apiResponse])
 
-    const handleAddToCart = (productId: string) => {
-
+    const handleAddToCart = async () => {
+        if (book) {
+            setIsAddToCart(true)
+            try {
+                const result = await addToCartMutation({
+                    productId: book?._id,
+                    quantity: 1,
+                }).unwrap();
+                if (result?.success && result.data) {
+                    dispatch(addToCart(result.data))
+                    toast.success(result.message || 'Added to cart successfully')
+                } else {
+                    throw new Error(result.message || 'Failed to add to cart')
+                }
+            } catch (error: any) {
+                const errormessage = error?.data?.message;
+                toast.error(errormessage)
+            } finally {
+                setIsAddToCart(false)
+            }
+        }
     }
-    const handleAddToWishlist = (productId: string) => {
-
+    const handleAddToWishlist = async (productId: string) => {
+        try {
+            const isWishlist = wishlist.some((item) =>
+                item.products.includes(productId)
+            )
+            if (isWishlist) {
+                const result = await removeWishlistMuttation(productId).unwrap();
+                if (result.success) {
+                    dispatch(removeFromWishListAction(productId))
+                    toast.success(result.message || 'Remove from wishlist')
+                } else {
+                    throw new Error(result.message || 'Failed to remove from wishlist')
+                }
+            } else {
+                const result = await addToWishlistMuttation(productId).unwrap();
+                if (result.success) {
+                    dispatch(addToWishlistAction(result.data))
+                    toast.success(result.message || 'Added to wishlist')
+                } else {
+                    throw new Error(result.message || 'Failed to add to wishlist')
+                }
+            }
+        } catch (error: any) {
+            // handle error
+            const errormessage = error?.data?.message;
+            toast.error(errormessage)
+        }
     }
     const bookImage = book?.images || [];
-    if(isLoading){
-        <BookLoader/>
+    if (isLoading) {
+        <BookLoader />
     }
     if (!book || isError) {
         return (
-          <div className="my-10 max-w-3xl justify-center mx-auto">
-            <NoData
-              imageUrl="/images/no-book.jpg"
-              message="Loading...."
-              description="Wait, we are fetching book details"
-              onClick={() => router.push("/book-sell")}
-              buttonText="Sell Your First Book"
-            />
-          </div>
+            <div className="my-10 max-w-3xl justify-center mx-auto">
+                <NoData
+                    imageUrl="/images/no-book.jpg"
+                    message="Loading...."
+                    description="Wait, we are fetching book details"
+                    onClick={() => router.push("/book-sell")}
+                    buttonText="Sell Your First Book"
+                />
+            </div>
         );
-      }
+    }
     const calculateDiscount = (price: number, finalPrice: number) => {
         if (price > finalPrice && price > 0) {
             return Math.round(((price - finalPrice) / price) * 100);
@@ -116,13 +169,15 @@ if(apiResponse.success){
                                 <p className='text-sm text-muted-foreground'>Postd {formatDate(book.createdAt)}</p>
                             </div>
                             <div className='flex gap-2'>
-                                <Button variant='outline'size='sm' >
-                                     <Share2Icon className='h-4 w-4 mr-1' />
+                                <Button variant='outline' size='sm' >
+                                    <Share2Icon className='h-4 w-4 mr-1' />
                                     <span className='hidden md:inline'>Share</span>
                                 </Button>
                                 <Button variant='outline' size='sm' onClick={() => handleAddToWishlist(book._id)}>
-                                    <Heart className='h-4 w-4 mr-1 fill-red-500' />
-                                    <span className='hidden md:inline'>Add</span>
+                                    <Heart className={`h-4 w-4 mr-1 ${wishlist.some((w)=>w.products.includes(book._id))?"fill-red-500":""}`}/>
+                                    <span className='hidden md:inline'>
+                                        {wishlist.some((w)=>w.products.includes(book._id))?"Remove":"Add"}
+                                        </span>
                                 </Button>
                             </div>
                         </div>
@@ -136,7 +191,7 @@ if(apiResponse.success){
                                 }
                                 <Badge variant='secondary' className='text-green-600'>Shipping Available</Badge>
                             </div>
-                            <Button className='w-60 py-6 bg-blue-700'>
+                            <Button className='w-60 py-6 bg-blue-700' onClick={handleAddToCart} disabled={isAddToCart}>
                                 {
                                     isAddToCart ? (
                                         <>
@@ -213,7 +268,7 @@ if(apiResponse.success){
                                         </div>
                                         <div className='flex items-center gap-2 text-sm text-muted-foreground'>
                                             <MapPin className='h-4 w-4' />{
-                                                book.seller?.addresses?.[0].city? `${book.seller?.addresses?.[0].city},${book.seller?.addresses?.[0].state}`:'location is not found'
+                                                book.seller?.addresses?.[0].city ? `${book.seller?.addresses?.[0].city},${book.seller?.addresses?.[0].state}` : 'location is not found'
                                             }
                                         </div>
                                     </div>
