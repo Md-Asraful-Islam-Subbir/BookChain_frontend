@@ -25,22 +25,21 @@ const Page = () => {
     const [selectedCategory, setSelectedCategory] = useState<string[]>([]);
     const [sortOption, setSortOption] = useState('newest');
     const bookPerPage = 6;
-    const {data:apiResponse={},isLoading}=useGetProductsQuery({})
+    const { data: apiResponse = {}, isLoading } = useGetProductsQuery({})
     const router = useRouter();
-    const [books,setBooks]=useState<BookDetails[]>([])
+    const [books, setBooks] = useState<BookDetails[]>([])
+const searchTerms=new URLSearchParams(window.location.search).get('search')||'';
 
-    useEffect(()=>{
-if(apiResponse.success){
-    setBooks(apiResponse.data)
-}
-    },[apiResponse])
+    useEffect(() => {
+        if (apiResponse.success) {
+            setBooks(apiResponse.data)
+        }
+    }, [apiResponse])
 
     const toggleFilter = (section: string, item: string) => {
-        const updateFilter = (prev: string[]) => {
-            return prev.includes(item)
-                ? prev.filter((i) => i !== item)
-                : [...prev, item];
-        }
+        const updateFilter = (prev: string[]) => 
+            prev.includes(item)? prev.filter((i) => i !== item): [...prev, item];
+        
 
         switch (section) {
             case "condition":
@@ -60,7 +59,12 @@ if(apiResponse.success){
         const conditionMatch = selectedCondition.length === 0 || selectedCondition.map(cond => cond.toLowerCase()).includes(book.condition.toLowerCase());
         const typeMatch = selectedType.length === 0 || selectedType.map(cond => cond.toLowerCase()).includes(book.classType.toLowerCase());
         const categoryMatch = selectedCategory.length === 0 || selectedCategory.map(cond => cond.toLowerCase()).includes(book.category.toLowerCase());
-        return conditionMatch && typeMatch && categoryMatch;
+        const searchMatch = searchTerms ? book.title.toLowerCase().includes(searchTerms.toLowerCase())
+      || book.author.toLowerCase().includes(searchTerms.toLowerCase())
+      || book.category.toLowerCase().includes(searchTerms.toLowerCase())
+      || book.subject.toLowerCase().includes(searchTerms.toLowerCase())
+      : true
+        return conditionMatch && typeMatch && categoryMatch&&searchMatch;
     })
     const sortedBooks = [...filterBooks].sort((a, b) => {
         switch (sortOption) {

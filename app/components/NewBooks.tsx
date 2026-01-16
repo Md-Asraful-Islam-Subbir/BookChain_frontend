@@ -1,7 +1,7 @@
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { books } from '@/lib/Constant';
+import { BookDetails } from '@/lib/types/type';
+import { useGetProductsQuery } from '@/store/api';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -9,6 +9,14 @@ import React, { useState, useEffect } from 'react'
 
 const NewBooks = () => {
   const [currentBookSlide, setcurrentBookSlide] = useState(0);
+  const { data: apiResponse = {}, isLoading } = useGetProductsQuery({})
+  const [books, setBooks] = useState<BookDetails[]>([])
+
+  useEffect(() => {
+    if (apiResponse.success) {
+      setBooks(apiResponse.data)
+    }
+  }, [apiResponse])
   useEffect(() => {
     const timer = setInterval(() => {
       setcurrentBookSlide((pre) => (pre + 1) % 3);

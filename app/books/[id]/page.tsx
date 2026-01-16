@@ -17,6 +17,7 @@ import { RootState } from '@/store/store';
 import toast from 'react-hot-toast';
 import { addToCart } from '@/store/slice/cartSlice';
 import { addToWishlistAction, removeFromWishListAction } from '@/store/slice/wishlistSlice';
+import { ShareButton } from '@/app/components/Share';
 
 const page = () => {
     const params = useParams();
@@ -90,7 +91,7 @@ const page = () => {
     }
     const bookImage = book?.images || [];
     if (isLoading) {
-        <BookLoader />
+       return <BookLoader />
     }
     if (!book || isError) {
         return (
@@ -169,10 +170,11 @@ const page = () => {
                                 <p className='text-sm text-muted-foreground'>Postd {formatDate(book.createdAt)}</p>
                             </div>
                             <div className='flex gap-2'>
-                                <Button variant='outline' size='sm' >
-                                    <Share2Icon className='h-4 w-4 mr-1' />
-                                    <span className='hidden md:inline'>Share</span>
-                                </Button>
+                                <ShareButton 
+                                url={`${window.location.origin}/books/${book._id}`}
+                                title={`check out this book: ${book.title}`}
+                                text={`I found this interesting book on BookChain :${book.title}`}
+                                />
                                 <Button variant='outline' size='sm' onClick={() => handleAddToWishlist(book._id)}>
                                     <Heart className={`h-4 w-4 mr-1 ${wishlist.some((w)=>w.products.includes(book._id))?"fill-red-500":""}`}/>
                                     <span className='hidden md:inline'>
@@ -268,7 +270,7 @@ const page = () => {
                                         </div>
                                         <div className='flex items-center gap-2 text-sm text-muted-foreground'>
                                             <MapPin className='h-4 w-4' />{
-                                                book.seller?.addresses?.[0].city ? `${book.seller?.addresses?.[0].city},${book.seller?.addresses?.[0].state}` : 'location is not found'
+                                                book.seller?.addresses?.[0]?.city ? `${book.seller?.addresses?.[0].city},${book.seller?.addresses?.[0].state}` : 'location is not found'
                                             }
                                         </div>
                                     </div>
@@ -312,7 +314,7 @@ const page = () => {
                                 description: "Seller then ships the books to the buyer",
                                 image: { src: "/icons/fast-delivery.png", alt: "Shipping" },
                             },].map((item, index) => (
-                                <Card className='bg-linear-to-br from-amber-50 to-amber-100 border-none p-6'>
+                                <Card key={index} className='bg-linear-to-br from-amber-50 to-amber-100 border-none p-6'>
                                     <CardHeader>
                                         <Badge className='w-fit mb-2'>{item.step}</Badge>
                                         <CardTitle className='text-lg'>{item.title}</CardTitle>

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { BookLock, ChevronRight, FileTerminal, Heart, HelpCircle, Lock, LogOut, Package, PiggyBank, Search, ShoppingCart, User, User2 } from 'lucide-react'
 import { DropdownMenu, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DropdownMenuContent } from '@/components/ui/dropdown-menu'
 import { useRouter } from 'next/navigation'
 import { useDispatch, useSelector } from 'react-redux'
@@ -15,8 +15,9 @@ import { logout, toggleLoginDialog } from '@/store/slice/userSlice'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, } from "@/components/ui/sheet"
 import { Menu } from 'lucide-react';
 import AuthPage from './AuthPage'
-import { useLogoutMutation } from '@/store/api'
+import { useGetCartQuery, useLogoutMutation } from '@/store/api'
 import toast from 'react-hot-toast'
+import { setCart } from '@/store/slice/cartSlice'
 
 
 const Header = () => {
@@ -24,6 +25,8 @@ const Header = () => {
     const router = useRouter();
     const dispatch = useDispatch();
     const isLoginOpen = useSelector((state: RootState) => state.user.isLoginDialogOpen)
+    const cartItemCount=useSelector((state:RootState)=>state.cart.items.length)
+   
     const handleLoginClick = () => {
         dispatch(toggleLoginDialog());
         setIsDropdownOpen(false);
@@ -51,7 +54,18 @@ const Header = () => {
     }
     const user = useSelector((state: RootState) => state.user.user);
     const [logoutMutation] = useLogoutMutation();
+     const {data:cartData}=useGetCartQuery(user?._id,{skip:!user})
     const userPlaceholder = user?.name?.split(" ").map((name: string) => name[0]).join("");
+
+    useEffect(()=>{
+        if(cartData?.success && cartData?.data){
+            dispatch(setCart(cartData.data))
+        }
+    },[cartData,dispatch])
+    const [searchTerms,setSearchTerms]=useState("")
+const handleSearch=()=>{
+    router.push(`/books?search=${encodeURIComponent(searchTerms)}`)
+}
     const menuItems = [
         ...(user ? [
             {
@@ -168,8 +182,8 @@ const Header = () => {
                 </Link>
                 <div className='flex flex-1 items-center justify-center max-w-xl px-4'>
                     <div className='relative w-full'>
-                        <Input type='text' placeholder='Search books, authors, ISBN...' className='w-full pr-10' />
-                        <Button className='absolute right-0 top-1/2 -translate-y-1/2' size='icon' variant='ghost'>
+                        <Input type='text' placeholder='Search books, authors, ISBN...' className='w-full pr-10' value={searchTerms} onChange={(e)=>setSearchTerms(e.target.value)}/>
+                        <Button className='absolute right-0 top-1/2 -translate-y-1/2' size='icon' variant='ghost' onClick={handleSearch}>
                             <Search className='h-5 w-5' />
                         </Button>
                     </div>
@@ -201,8 +215,8 @@ const Header = () => {
                                 <ShoppingCart className='h-6 w-6 mr-2' />
                                 Cart
                             </Button>
-                            {user && (
-                                <span className='absolute top-2 left-5 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full px-1'>3</span>
+                            {user && cartItemCount>0 && (
+                                <span className='absolute top-2 left-5 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full px-1'>{cartItemCount}</span>
                             )}
                         </div>
                     </Link>
@@ -251,8 +265,8 @@ const Header = () => {
                             <ShoppingCart className='h-6 w-6 mr-2' />
 
                         </Button>
-                        {user && (
-                            <span className='absolute top-2 left-5 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full px-1'>3</span>
+                        {user && cartItemCount>0 &&(
+                            <span className='absolute top-2 left-5 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full px-1'>{cartItemCount}</span>
                         )}
                     </div>
                 </Link>
