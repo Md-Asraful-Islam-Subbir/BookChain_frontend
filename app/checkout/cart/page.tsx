@@ -31,7 +31,20 @@ const page = () => {
     const cart = useSelector((state: RootState) => state.cart)
     const [createOrUpdateOrder]=useCreateOrUpdateOrderMutation();
     const {data:orderData,isLoading:isOrderLoading}=useGetOrderByIdQuery(orderId||'');
+  const [createRazorpayPayment] = useCreateRazorpayPaymentMutation();
+  const [selectedAddress,setSelectedAddress] = useState<Address | null>(null);
 
+  useEffect(() => {
+    if(orderData && orderData.shippingAddress) {
+      setSelectedAddress(orderData.shippingAddress)
+    }
+  },[orderData])
+
+  useEffect(() => {
+    if(step === 'address' && !selectedAddress){
+      setShowAddressDialog(true);
+    }
+  },[step,selectedAddress])
     useEffect(() => {
         if (cartData?.success && cartData?.data) {
             dispatch(setCart(cartData.data))
