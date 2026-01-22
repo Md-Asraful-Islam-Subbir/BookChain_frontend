@@ -1,9 +1,12 @@
 'use client'
 
 import CartItems from '@/app/components/CartItems';
+import CheckoutAddress from '@/app/components/CheckoutAddress';
 import NoData from '@/app/components/NoData';
 import PriceDetails from '@/app/components/PriceDetails';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Address } from '@/lib/types/type';
 import { useAddToWishlistMutation, useCreateOrUpdateOrderMutation, useGetCartQuery, useGetOrderByIdQuery, useRemoveFromCartMutation, useRemoveFromWishlistMutation } from '@/store/api';
 import { setCart } from '@/store/slice/cartSlice';
@@ -23,10 +26,9 @@ const page = () => {
   const user = useSelector((state: RootState) => state.user.user);
   const { orderId, step } = useSelector((state: RootState) => state.checkout);
   const [showAddressDialog, setShowAddressDialog] = useState(false);
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { data: cartData, isLoading: isCartLoading } = useGetCartQuery(user?._id);
   const [removeCartMutation] = useRemoveFromCartMutation();
-  const [addWishListMutation] = useAddToWishlistMutation();
   const [removeWishListMutation] = useRemoveFromWishlistMutation();
   const [addToWishlistMuttation] = useAddToWishlistMutation();
   const wishlist = useSelector((state: RootState) => state.wishlist.items)
@@ -56,7 +58,7 @@ const page = () => {
   const handleRemoveItem = async (productId: string) => {
     try {
       const result = await removeCartMutation(productId).unwrap();
-      if (result.success && result.data) {
+      if (result.success) {
         dispatch(setCart(result.data))
         toast.success(result.message || 'Item removed successfully')
       }
@@ -99,7 +101,9 @@ const page = () => {
   const totalAmount = cart.items.reduce((acc, item) => acc + (item.product.finalPrice * item.quantity), 0);
   const totalOriginalAmount = cart.items.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
   const totalDiscount = totalOriginalAmount - totalAmount;
-
+  const shippingCharge = cart.items.map(item => item.product.shippingCharge.toLowerCase() === 'free' ? 0 : parseFloat(item.product.shippingCharge) || 0)
+  const maxShippingCharge = Math.max(...shippingCharge, 0);
+  const finalAmount = totalAmount + maxShippingCharge;
   const handleProceedToCheckout = async () => {
     if (step === 'cart') {
       try {
@@ -127,7 +131,7 @@ const page = () => {
       handlePayment();
     }
   }
-  const handleSelecteAddress = async (address: Address) => {
+  const handleSelectAddress = async (address: Address) => {
     setSelectedAddress(address);
     setShowAddressDialog(false);
     if (orderId) {
@@ -183,7 +187,7 @@ const page = () => {
           <div className='mb-8'>
             <div className='flex justify-center items-center gap-4'>
               <div className='flex items-center gap-2'>
-                <div className='rounded-full p-3 ${step === "cart" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-600"}'>
+                <div className={`rounded-full p-3 ${step === "cart" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-600"}`}>
                   <ShoppingCart className='h-6 w-6' />
                 </div>
                 <span className='font-medium hidden md:inline'>
@@ -192,7 +196,7 @@ const page = () => {
               </div>
               <ChevronRight className='h-5 w-5 text-gray-400' />
               <div className='flex items-center gap-2'>
-                <div className='rounded-full p-3 ${step === "addresses" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-600"}'>
+                <div className={`rounded-full p-3 ${step === "addresses" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-600"}`}>
                   <MapPin className='h-6 w-6' />
                 </div>
                 <span className='font-medium hidden md:inline'>
@@ -201,7 +205,7 @@ const page = () => {
               </div>
               <ChevronRight className='h-5 w-5 text-gray-400' />
               <div className='flex items-center gap-2'>
-                <div className='rounded-full p-3 ${step === "payment" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-600"}'>
+                <div className={`rounded-full p-3 ${step === "payment" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-600"}`}>
                   <ShoppingCart className='h-6 w-6' />
                 </div>
                 <span className='font-medium hidden md:inline'>
@@ -229,20 +233,63 @@ const page = () => {
               </Card>
             </div>
 
-            <div>
               <div>
                 <PriceDetails
                   totalOriginalAmount={totalOriginalAmount}
-                  totalAmount={totalAmount}
+                  totalAmount={finalAmount}
+                  shippingCharge={maxShippingCharge}
                   totalDiscount={totalDiscount}
                   itemCount={cart.items.length}
+                  isProcessing={isProcessing}
                   step={step}
                   onProceed={handleProceedToCheckout}
-                  onBack={()=>dispatch(setCheckoutStep(step==='addresses'?'cart':'addresses'))}
+                  onBack={() => dispatch(setCheckoutStep(step === 'addresses' ? 'cart' : 'addresses'))}
                 />
+                {selectedAddress && (
+        <Card className='mt-6 mb-6 shadow-lg'>
+          <CardHeader>
+            <CardTitle className='text-xl'>Delivery Address</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className='space-y-1'>
+              <p>{selectedAddress?.state}</p>
+              {selectedAddress?.addressLine2 && (
+                <p>{selectedAddress?.addressLine2}</p>
+              )}
+              <p></p>
+              <p>
+                {selectedAddress.city}, {selectedAddress.state}{" "}
+              </p>
+              <p>{selectedAddress.pincode}</p>
+              <p></p>
+              <p>Phone: {selectedAddress.phoneNumber}</p>
+            </div>
+          </CardContent>
+          <Button 
+            className='mt-4' 
+            variant='outline'
+            onClick={() => setShowAddressDialog(true)}
+          >
+            <MapPin className='h-4 w-4 mr-2'/> Change Address
+          </Button>
+        </Card>
+      )}
               </div>
             </div>
-          </div>
+          <Dialog open={showAddressDialog} onOpenChange={setShowAddressDialog}>
+          <DialogContent className='sm:max-w-150'>
+            <DialogHeader>
+              <DialogTitle>
+                Select or Add Delivery Address
+              </DialogTitle>
+            </DialogHeader>
+            
+            <CheckoutAddress
+              onAddressSelect={handleSelectAddress}
+              selectedAddressId={selectedAddress?._id}
+            />
+          </DialogContent>
+        </Dialog>
         </div>
       </div>
     </>
