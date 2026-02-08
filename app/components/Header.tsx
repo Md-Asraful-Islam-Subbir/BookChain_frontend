@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { RootState } from '@/store/store'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { BookLock, ChevronRight, FileTerminal, Heart, HelpCircle, Lock, LogOut, Package, PiggyBank, Search, ShoppingCart, User, User2 } from 'lucide-react'
+import { BookLock, BookOpen, ChevronRight, FileTerminal, Heart, HelpCircle, Lock, LogOut, Package, PiggyBank, Search, ShoppingCart, User, User2 } from 'lucide-react'
 import { DropdownMenu, DropdownMenuTrigger } from '@radix-ui/react-dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useEffect, useState } from 'react'
@@ -25,8 +25,8 @@ const Header = () => {
     const router = useRouter();
     const dispatch = useDispatch();
     const isLoginOpen = useSelector((state: RootState) => state.user.isLoginDialogOpen)
-    const cartItemCount=useSelector((state:RootState)=>state.cart.items.length)
-   
+    const cartItemCount = useSelector((state: RootState) => state.cart.items.length)
+
     const handleLoginClick = () => {
         dispatch(toggleLoginDialog());
         setIsDropdownOpen(false);
@@ -54,18 +54,18 @@ const Header = () => {
     }
     const user = useSelector((state: RootState) => state.user.user);
     const [logoutMutation] = useLogoutMutation();
-     const {data:cartData}=useGetCartQuery(user?._id,{skip:!user})
+    const { data: cartData } = useGetCartQuery(user?._id, { skip: !user })
     const userPlaceholder = user?.name?.split(" ").map((name: string) => name[0]).join("");
 
-    useEffect(()=>{
-        if(cartData?.success && cartData?.data){
+    useEffect(() => {
+        if (cartData?.success && cartData?.data) {
             dispatch(setCart(cartData.data))
         }
-    },[cartData,dispatch])
-    const [searchTerms,setSearchTerms]=useState("")
-const handleSearch=()=>{
-    router.push(`/books?search=${encodeURIComponent(searchTerms)}`)
-}
+    }, [cartData, dispatch])
+    const [searchTerms, setSearchTerms] = useState("")
+    const handleSearch = () => {
+        router.push(`/books?search=${encodeURIComponent(searchTerms)}`)
+    }
     const menuItems = [
         ...(user ? [
             {
@@ -178,11 +178,14 @@ const handleSearch=()=>{
         <header className='border-b bg-white sticky top-0 z-50'>
             <div className='container w-[80%] mx-auto hidden lg:flex justify-between items-center p-4'>
                 <Link href='/' className='text-2xl font-bold'>
-                    <Image src='/images/web-logo1.png' alt='Desktop Logo' width={450} height={100} className='h-15 w-auto mr-8' />
-                </Link>
+                    <div className="flex items-center space-x-2">
+                        <BookOpen className="h-8 w-8 text-emerald-600" />
+                        <span className="text-2xl font-bold text-gray-900">BookChain</span>
+                    </div>                
+                    </Link>
                 <div className='flex flex-1 items-center justify-center max-w-xl px-4'>
                     <div className='relative w-full'>
-                        <Input type='text' placeholder='Search books, authors, ISBN...' className='w-full pr-10' value={searchTerms} onChange={(e)=>setSearchTerms(e.target.value)}/>
+                        <Input type='text' placeholder='Search books, authors, ISBN...' className='w-full pr-10' value={searchTerms} onChange={(e) => setSearchTerms(e.target.value)} />
                         <Button className='absolute right-0 top-1/2 -translate-y-1/2' size='icon' variant='ghost' onClick={handleSearch}>
                             <Search className='h-5 w-5' />
                         </Button>
@@ -215,7 +218,7 @@ const handleSearch=()=>{
                                 <ShoppingCart className='h-6 w-6 mr-2' />
                                 Cart
                             </Button>
-                            {user && cartItemCount>0 && (
+                            {user && cartItemCount > 0 && (
                                 <span className='absolute top-2 left-5 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full px-1'>{cartItemCount}</span>
                             )}
                         </div>
@@ -234,23 +237,22 @@ const handleSearch=()=>{
                         <SheetHeader>
                             <SheetTitle className="sr-only"></SheetTitle>
                         </SheetHeader>
-                        <div className="border-b p-4">
+                        <div className="border-b p-2">
                             <Link href="/">
-                                <Image
-                                    src="/images/web-logo1.png"
-                                    width={150}
-                                    height={40}
-                                    alt="mobile_logo"
-                                    className="h-10 w-auto"
-                                />
+                               <div className="flex items-center space-x-2">
+                        <BookOpen className="h-8 w-8 text-emerald-600" />
+                        <span className="text-2xl font-bold text-gray-900">BookChain</span>
+                    </div> 
                             </Link>
                         </div>
                         <MenuItems className="py-2 -mt-8" />
                     </SheetContent>
                 </Sheet>
                 <Link href='/' className='text-2xl font-bold'>
-                    <Image src='/images/web-logo1.png' alt='Desktop Logo' width={450} height={100} className='h-6 md:h-10 w-20 md:w-auto' />
-                </Link>
+<div className="flex items-center space-x-2">
+                        <BookOpen className="h-6 w-6 text-emerald-600" />
+                        <span className="text-xl font-bold text-gray-900">BookChain</span>
+                    </div>                 </Link>
                 <div className='flex flex-1 items-center justify-center max-w-xl px-4'>
                     <div className='relative w-full'>
                         <Input type='text' placeholder='Search books...' className='w-full pr-10' />
@@ -265,7 +267,7 @@ const handleSearch=()=>{
                             <ShoppingCart className='h-6 w-6 mr-2' />
 
                         </Button>
-                        {user && cartItemCount>0 &&(
+                        {user && cartItemCount > 0 && (
                             <span className='absolute top-2 left-5 transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs rounded-full px-1'>{cartItemCount}</span>
                         )}
                     </div>

@@ -75,7 +75,7 @@ const page = () => {
                     throw new Error(result.message || 'Failed to remove from wishlist')
                 }
             } else {
-                const result = await addToWishlistMuttation(productId).unwrap();
+                const result = await addToWishlistMuttation({productId}).unwrap();
                 if (result.success) {
                     dispatch(addToWishlistAction(result.data))
                     toast.success(result.message || 'Added to wishlist')
@@ -265,7 +265,7 @@ const page = () => {
 
                                     <div>
                                         <div className='flex items-center gap-2'>
-                                            <span className='font-medium'>{book.seller.name}</span>
+                                            <span className='font-medium'>{book.seller?.name}</span>
                                             <Badge variant='secondary' className='text-green-600'><CheckCircle2 className='h-3 w-3 mt-2' />Verified</Badge>
                                         </div>
                                         <div className='flex items-center gap-2 text-sm text-muted-foreground'>
@@ -277,10 +277,10 @@ const page = () => {
                                 </div>
                             </div>
                             {
-                                book.seller.phoneNumber && (
+                                book.seller?.phoneNumber && (
                                     <div className='flex items-center gap-2 text-sm'>
                                         <MessageCircle className='h-4 w-4 text-blue-600' />
-                                        <span>Contact: {book.seller.phoneNumber}</span>
+                                        <span>Contact: {book.seller?.phoneNumber}</span>
                                     </div>
                                 )
                             }

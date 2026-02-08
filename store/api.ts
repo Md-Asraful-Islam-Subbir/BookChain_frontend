@@ -82,7 +82,7 @@ export const api = createApi({
         }),
         updateUser: builder.mutation({
             query: ({ userId, userData }) => ({
-                url: API_URLS.UPDATE_USER_PROFILE(userId), method: "GET", body: userData,
+                url: API_URLS.UPDATE_USER_PROFILE(userId), method: "PUT", body: userData,
             })
         }),
         //product
@@ -154,11 +154,16 @@ export const api = createApi({
             providesTags: ['Order'],
         }),
         createOrUpdateOrder: builder.mutation({
-            query: ({ orderId, orderData }) => ({
-                url: API_URLS.ORDERS, method: orderId ? "PATCH" : "POST", body: orderData
-            }),
-            invalidatesTags: ['Order'],
-        }),
+  query: ({ orderId, ...orderData }) => ({
+    url: orderId
+      ? API_URLS.ORDER_BY_ID(orderId)
+      : API_URLS.ORDERS,
+    method: orderId ? "PATCH" : "POST",
+    body: orderData,
+  }),
+  invalidatesTags: ['Order'],
+}),
+
         //address endpoints
         getAddress: builder.query<any[], void>({
             query: () => API_URLS.GET_ADDRESS,

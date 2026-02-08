@@ -1,3 +1,4 @@
+'use client';
 import { Address } from '@/lib/types/type';
 import { useAddOrUpdateAddressMutation, useGetAddressQuery } from '@/store/api';
 import React, { useState } from 'react';
@@ -10,8 +11,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Pencil, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Form,FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import toast from 'react-hot-toast';
 
 interface AddressResponse {
     success: boolean;
@@ -26,7 +28,7 @@ const addressFormSchema = zod.object({
     addressLine2: zod.string().optional(),
     city: zod.string().min(2, "City at least 2 characters"),
     state: zod.string().min(2, "State at least 2 characters"),
-    pincode: zod.string().min(6, "Pincode must be 6 digits")
+    pincode: zod.string().min(4, "Pincode must be 4 digits")
 });
 type AddressFormValues = zod.infer<typeof addressFormSchema>;
 
@@ -65,23 +67,34 @@ const CheckoutAddress: React.FC<CheckoutAddressProps> = ({ onAddressSelect, sele
         setShowAddressForm(true);
     }
     const onSubmit = async (data: AddressFormValues) => {
-        try {
-            let result;
-            if (editingAddress) {
-                const updateAddress = {
-                    ...editingAddress,
-                    ...data,
-                    addressId: editingAddress._id,
-                };
-                result = await addOrUpdateAddress(updateAddress).unwrap();
-            }
-            else {
-                result = await addOrUpdateAddress(data).unwrap();
-            }
-        } catch (error) {
-            console.log(error);
+    try {
+        let result;
+        if (editingAddress) {
+            const updateAddress = {
+                ...editingAddress,
+                ...data,
+                addressId: editingAddress._id,
+            };
+            result = await addOrUpdateAddress(updateAddress).unwrap();
+            toast.success(result.message || 'Address updated successfully');
+        } else {
+            result = await addOrUpdateAddress(data).unwrap();
+            toast.success(result.message || 'Address added successfully');
         }
+
+        // close dialog
+        setShowAddressForm(false);
+        // reset editing state
+        setEditingAddress(null);
+        // reset form
+        form.reset();
+    } catch (error: any) {
+        console.error(error);
+        const message = error?.data?.message || "Failed to save address";
+        toast.error(message);
     }
+}
+
     if (isLoading) {
         <BookLoader />;
     }
@@ -91,7 +104,7 @@ const CheckoutAddress: React.FC<CheckoutAddressProps> = ({ onAddressSelect, sele
                 {addresses.map((address: Address) => (
                     <Card
                         key={address._id}
-                        className={`relative overflow-hidden rounded-lg border transition-all duration-300 ${selectedAddressId === address._id
+                        className={`relative overflow-hidden rounded-lg border transition-all duration-300 p-6 ${selectedAddressId === address._id
                             ? 'border-blue-500 bg-blue-50'
                             : 'border-gray-200'
                             }`}
@@ -191,31 +204,31 @@ const CheckoutAddress: React.FC<CheckoutAddressProps> = ({ onAddressSelect, sele
                             />
                             <div className='grid grid-cols-2 gap-4'>
                                 <FormField
-                                control={form.control}
-                                name="city"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>city</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="city" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-<FormField
-                                control={form.control}
-                                name="state"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>state</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="state" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                                    control={form.control}
+                                    name="city"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>city</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="city" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="state"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>state</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="state" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
                             </div>
                             <FormField
                                 control={form.control}
@@ -231,7 +244,7 @@ const CheckoutAddress: React.FC<CheckoutAddressProps> = ({ onAddressSelect, sele
                                 )}
                             />
                             <Button type='submit' className='w-full'>
-                                {editingAddress? 'Update Address':'Add Address'}
+                                {editingAddress ? 'Update Address' : 'Add Address'}
                             </Button>
                         </form>
                     </Form>

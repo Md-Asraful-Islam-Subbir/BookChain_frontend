@@ -81,7 +81,7 @@ const page = () => {
           throw new Error(result.message || 'Failed to remove from wishlist')
         }
       } else {
-        const result = await addToWishlistMuttation(productId).unwrap();
+        const result = await addToWishlistMuttation({productId}).unwrap();
         if (result.success) {
           dispatch(addToWishlistAction(result.data))
           toast.success(result.message || 'Added to wishlist')
@@ -104,6 +104,7 @@ const page = () => {
   const shippingCharge = cart.items.map(item => item.product.shippingCharge.toLowerCase() === 'free' ? 0 : parseFloat(item.product.shippingCharge) || 0)
   const maxShippingCharge = Math.max(...shippingCharge, 0);
   const finalAmount = totalAmount + maxShippingCharge;
+  
   const handleProceedToCheckout = async () => {
     if (step === 'cart') {
       try {
@@ -217,7 +218,7 @@ const page = () => {
 
           <div className='grid gap-8 lg:grid-cols-3'>
             <div className='lg:col-span-2 '>
-              <Card className='shadow-lg '>
+              <Card className='shadow-lg p-6 '>
                 <CardHeader>
                   <CardTitle className='text-2xl'>Order Summary</CardTitle>
                   <CardDescription>Review your items</CardDescription>
@@ -235,6 +236,7 @@ const page = () => {
 
               <div>
                 <PriceDetails
+                  orderId={orderId}
                   totalOriginalAmount={totalOriginalAmount}
                   totalAmount={finalAmount}
                   shippingCharge={maxShippingCharge}
@@ -246,7 +248,7 @@ const page = () => {
                   onBack={() => dispatch(setCheckoutStep(step === 'addresses' ? 'cart' : 'addresses'))}
                 />
                 {selectedAddress && (
-        <Card className='mt-6 mb-6 shadow-lg'>
+        <Card className='mt-6 mb-6 shadow-lg p-6'>
           <CardHeader>
             <CardTitle className='text-xl'>Delivery Address</CardTitle>
           </CardHeader>

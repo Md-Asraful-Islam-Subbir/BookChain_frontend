@@ -1,3 +1,4 @@
+'use client';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -71,7 +72,9 @@ const AuthPage: React.FC<LoginProps> = ({ isLoginOpen, setIsLoginOpen }) => {
     const onSubmitLogin = async (data: LoginFormData) => {
         setLoginLoading(true)
         try {
+            console.log(data);
             const result = await login(data).unwrap();
+            console.log(result)
             console.log('this is login result', result);
             if (result.success) {
                 toast.success('User login successfully')

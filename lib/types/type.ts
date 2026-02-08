@@ -30,7 +30,7 @@ export interface UserData {
     email: string;
     profilePicture: string;
     phoneNumber: string;
-    addresses:Address[];
+    addresses: Address[];
 }
 
 export interface Address {
@@ -67,14 +67,16 @@ export interface PaymentDetails {
     razorpay_signature: String
 }
 
-export interface Order{
+export interface Order {
     _id: string;
     user: UserData;
     items: OrderItem[];
     totalAmount: number;
-    shippingAddress:Address;
+    shippingAddress: Address;
     paymentStatus: string;
     paymentMethod: string;
     paymentDetails: PaymentDetails;
     status: 'processing' | 'shipped' | 'delivered' | 'cancelled';
+    createdAt: string;
+    updatedAt: string;
 }

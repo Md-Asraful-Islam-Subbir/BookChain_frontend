@@ -116,7 +116,7 @@ const NewBooks = () => {
               </>
             ) :
               <>
-                <p>No books available</p>
+                <p className='text-center text-lg font-semibold text-gray-500 mb-2 '>No books available.Please Log in to view books.</p>
               </>
           }
         </div>

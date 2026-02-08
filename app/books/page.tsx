@@ -239,7 +239,7 @@ const searchTerms=new URLSearchParams(window.location.search).get('search')||'';
                         ) : (
                             <NoData
                                 imageUrl="/images/no-book.jpg"
-                                message="No books available please try later."
+                                message="No books available please sign in /log in or try later."
                                 description="Try adjusting your filters or search criteria to find what you're looking for."
                                 onClick={() => router.push("/book-sell")}
                                 buttonText="Sell Your First Book"
