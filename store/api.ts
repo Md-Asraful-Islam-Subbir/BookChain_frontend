@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
-export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://bookchain-backend.onrender.com/api";
 
 const API_URLS = {
     // User related urls
