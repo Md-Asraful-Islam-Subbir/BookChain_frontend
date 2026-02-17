@@ -36,7 +36,7 @@ const PriceDetails: React.FC<PriceDetailsProps> = ({
     setLoading(true);
 
     const res = await fetch(
-      `http://localhost:8000/api/payment/stripe/create-session`,
+      `https://bookchain-backend.onrender.com/api/payment/stripe/create-session`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
